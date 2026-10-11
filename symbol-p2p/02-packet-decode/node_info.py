@@ -1,4 +1,4 @@
-"""Read one Symbol Node_Discovery_Pull_Ping response (or an offline fixture)."""
+"""Read one Symbol Node_Discovery_Pull_Ping response over TLS."""
 import argparse
 from pathlib import Path
 from dataclasses import dataclass
@@ -16,17 +16,6 @@ PULL_PING = 0x111
 NODE_FIXED = struct.Struct("<II32s32sIHBBB")
 MIN_PACKET_SIZE = HEADER.size + NODE_FIXED.size
 MAX_PACKET_SIZE = MIN_PACKET_SIZE + 2 * 255
-
-# Synthetic packet: test-network identifier, deliberately fictitious key/seed.
-DEMO_PACKET = bytes.fromhex(
-    "66000000 11010000 5e000000 04030201"
-    "000102030405060708090a0b0c0d0e0f"
-    "101112131415161718191a1b1c1d1e1f"
-    "202122232425262728292a2b2c2d2e2f"
-    "303132333435363738393a3b3c3d3e3f"
-    "01000000 dc1e 98 09 04"
-    "6c6f63616c686f7374 6e6f6465"
-)
 
 
 @dataclass(frozen=True)
@@ -133,24 +122,16 @@ def query(host: str, port: int, context) -> NodeInfo:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--demo", action="store_true", help="通信せず模擬パケットを解析")
-    mode.add_argument("--host", help="接続先のホスト名または IP")
+    parser.add_argument("host", help="接続先のホスト名または IP")
     parser.add_argument("--port", type=int, default=7900)
-    parser.add_argument("--peer-ca")
     parser.add_argument("--cert", default=str(CERT_DIRECTORY / "node.full.crt.pem"))
     parser.add_argument("--key", default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port は 1〜65535 で指定してください")
-    if args.host and not args.peer_ca:
-        parser.error("接続には --peer-ca が必要です")
     try:
-        if args.demo:
-            result = parse_packet(DEMO_PACKET)
-        else:
-            context = make_context(args.peer_ca, args.cert, args.key)
-            result = query(args.host, args.port, context)
+        context = make_context(args.cert, args.key)
+        result = query(args.host, args.port, context)
     except (OSError, ValueError) as exc:
         print(f"取得・解析失敗: {exc}", file=sys.stderr)
         return 1

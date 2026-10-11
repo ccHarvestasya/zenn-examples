@@ -1,4 +1,4 @@
-"""Query one Symbol Chain_Statistics packet over authenticated TLS."""
+"""Learning example: query Chain_Statistics without authenticating the peer."""
 import argparse
 from pathlib import Path
 from dataclasses import dataclass
@@ -62,15 +62,14 @@ def read_statistics(sock, deadline: float) -> ChainStatistics:
     return ChainStatistics(*STATISTICS.unpack(payload))
 
 
-def make_context(peer_ca: str, cert: str, key: str) -> ssl.SSLContext:
+def make_context(cert: str, key: str) -> ssl.SSLContext:
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    # Identity is bound to the pre-trusted peer CA, not to a DNS name.
+    # Learning example only: the peer certificate is NOT verified.
     context.check_hostname = False
-    context.verify_mode = ssl.CERT_REQUIRED
+    context.verify_mode = ssl.CERT_NONE
     context.minimum_version = ssl.TLSVersion.TLSv1_3
     context.maximum_version = ssl.TLSVersion.TLSv1_3
     context.set_ecdh_curve("X25519")
-    context.load_verify_locations(cafile=peer_ca)
     context.load_cert_chain(certfile=cert, keyfile=key)
     return context
 
@@ -89,14 +88,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("host")
     parser.add_argument("--port", type=int, default=7900)
-    parser.add_argument("--peer-ca", required=True)
     parser.add_argument("--cert", default=str(CERT_DIRECTORY / "node.full.crt.pem"))
     parser.add_argument("--key", default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port は 1〜65535 で指定してください")
     try:
-        context = make_context(args.peer_ca, args.cert, args.key)
+        context = make_context(args.cert, args.key)
         result = query(args.host, args.port, context)
     except (OSError, ValueError) as exc:
         print(f"通信失敗: {exc}", file=sys.stderr)

@@ -88,10 +88,9 @@ class TLSTests(unittest.TestCase):
         self.addCleanup(thread.join, 6)
         return port, thread, state
 
-    def context(self, trusted='server'):
+    def context(self):
         cert = self.base / 'client/cert'
-        return client.make_context(str(self.base / trusted / 'cert/ca.crt.pem'),
-                                   str(cert / 'node.full.crt.pem'), str(cert / 'node.key.pem'))
+        return client.make_context(str(cert / 'node.full.crt.pem'), str(cert / 'node.key.pem'))
 
 
 

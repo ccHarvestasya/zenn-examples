@@ -115,3 +115,44 @@ TLS の模擬サーバーは通常の OpenSSL 相互認証を使い、Catapult �
 - `openapi/spec/core/node/schemas/NodeInfoDTO.yml`：REST のフィールドを照合。REST を呼び出した実測比較ではない。
 
 表示の追加テストはバージョンの 0 / 最大値、複合・未知ロール、既知・未知ネットワークを対象とした。CLI の TLS 取得テストも追加し、モックが受けた要求と出力 JSON を照合した。
+
+## 第2回の Testnet 取得結果（2026-10-12）
+
+取得日時：2026-10-12 07:51 JST（2026-10-11 22:51 UTC）。`02-packet-decode/` の `node_info.py --host testnet1.symbol-mikun.net --port 7900` を実行し、共通の `common/cert/` にあるクライアント証明書と秘密鍵を使用した。既存の CA 秘密鍵を再利用し、CA の識別鍵を変更していない。
+
+第2回の学習用CLIでは接続先 CA ファイルを必須にしない。指定しない場合は `CERT_NONE`、管理下の環境で確認済み CA を指定した場合は従来どおり `CERT_REQUIRED` を使う。接続先の識別公開鍵の照合は実装していない。
+
+```json
+{
+  "node_size": 117,
+  "version": "0x01000309",
+  "version_text": "1.0.3.9",
+  "identity_key": "07B29046E1E45B5162319EA40E271A8ECC1073C73F6881AF528895AE3685856F",
+  "generation_hash_seed": "49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4",
+  "roles": "0x00000007",
+  "role_names": [
+    "Peer",
+    "API",
+    "Voting"
+  ],
+  "port": 7900,
+  "network_identifier": "0x98",
+  "network_name": "Testnet",
+  "host_size": 25,
+  "friendly_name_size": 11,
+  "host": "testnet1.symbol-mikun.net",
+  "friendly_name": "mikun_test1",
+  "host_hex": "746573746e6574312e73796d626f6c2d6d696b756e2e6e6574",
+  "friendly_name_hex": "6d696b756e5f7465737431"
+}
+```
+
+NetworkNode は117バイト、共通ヘッダーを含む応答全体は125バイト。CLI の証明書検証を省略した接続と、従来の CA を指定したローカル TLS 接続の両方をテストする。Python 3.12.3 / OpenSSL 3.5.2 で取得。
+
+## 第1回との統一
+
+第2回の CLI は `node_info.py HOST --port 7900`。`--demo`、`--host`、`--peer-ca` は削除し、接続先の証明書検証は `CERT_NONE` のみとした。固定パケットは読者用コードから `tests/symbol-p2p/02-packet-decode/node_fixture.py` に移した。第3回以降のコードは変更していない。過去の取得コマンドは上記の記録どおりだが、現在のコマンドは以下となる。
+
+```bash
+python3 node_info.py testnet1.symbol-mikun.net --port 7900
+```
