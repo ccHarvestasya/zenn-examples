@@ -38,15 +38,32 @@ class NodeInfo:
     host: bytes
     friendly_name: bytes
 
+    @property
+    def version_text(self) -> str:
+        return ".".join(str((self.version >> shift) & 255) for shift in (24, 16, 8, 0))
+
+    @property
+    def role_names(self) -> list[str]:
+        known = {1: "Peer", 2: "API", 4: "Voting", 0x40: "IPv4", 0x80: "IPv6"}
+        names = [name for bit, name in known.items() if self.roles & bit]
+        unknown = self.roles & ~0xC7
+        if unknown:
+            names.append(f"Unknown(0x{unknown:X})")
+        return names or ["None"]
+
     def to_dict(self) -> dict:
         return {
             "node_size": self.size,
             "version": f"0x{self.version:08X}",
+            "version_text": self.version_text,
             "identity_key": self.identity_key.hex().upper(),
             "generation_hash_seed": self.generation_hash_seed.hex().upper(),
             "roles": f"0x{self.roles:08X}",
+            "role_names": self.role_names,
             "port": self.port,
             "network_identifier": f"0x{self.network_identifier:02X}",
+            "network_name": {0x68: "Mainnet", 0x98: "Testnet"}.get(
+                self.network_identifier, "Unknown"),
             "host_size": len(self.host),
             "friendly_name_size": len(self.friendly_name),
             # UTF-8 is a display choice, not an assumption about the wire format.

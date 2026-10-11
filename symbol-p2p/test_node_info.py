@@ -47,6 +47,28 @@ class NodeInfoTests(unittest.TestCase):
         self.assertEqual((result.roles, result.port, result.network_identifier), (1, 7900, 0x98))
         self.assertEqual((result.host, result.friendly_name), (b'localhost', b'node'))
 
+    def test_version_components(self):
+        for value, text in ((0x01020304, '1.2.3.4'), (0, '0.0.0.0'),
+                            (0xffffffff, '255.255.255.255')):
+            result = node.parse_packet(replace_u32(node.DEMO_PACKET, 12, value))
+            self.assertEqual(result.version_text, text)
+
+    def test_roles_combined_and_unknown(self):
+        for value, names in ((0, ['None']), (7, ['Peer', 'API', 'Voting']),
+                             (0xC1, ['Peer', 'IPv4', 'IPv6']),
+                             (9, ['Peer', 'Unknown(0x8)'])):
+            result = node.parse_packet(replace_u32(node.DEMO_PACKET, 80, value))
+            self.assertEqual(result.role_names, names)
+            self.assertEqual(result.roles, value)
+
+    def test_network_display_keeps_raw_identifier(self):
+        for value, label in ((0x68, 'Mainnet'), (0x98, 'Testnet'), (0xA8, 'Unknown')):
+            packet = bytearray(node.DEMO_PACKET)
+            packet[86] = value
+            result = node.parse_packet(bytes(packet))
+            self.assertEqual(result.to_dict()['network_name'], label)
+            self.assertEqual(result.network_identifier, value)
+
     def test_short_headers(self):
         for size in range(8):
             with self.subTest(size=size), self.assertRaises(node.ProtocolError):
@@ -150,6 +172,21 @@ class NodeInfoTLSTests(unittest.TestCase):
     tearDownClass = classmethod(legacy.TLSTests.tearDownClass.__func__)
     serve = legacy.TLSTests.serve
     context = legacy.TLSTests.context
+
+    def test_node_info_cli_tls_round_trip(self):
+        with patch.object(legacy, 'FRAME', node.DEMO_PACKET):
+            port, thread, state = self.serve()
+            cert = self.base / 'client/cert'
+            run = subprocess.run([
+                sys.executable, str(ROOT / 'node_info.py'), '--host', '127.0.0.1',
+                '--port', str(port), '--peer-ca', str(self.base / 'server/cert/ca.crt.pem'),
+                '--cert', str(cert / 'node.full.crt.pem'), '--key', str(cert / 'node.key.pem'),
+            ], capture_output=True, text=True, timeout=15)
+            thread.join(6)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertEqual(json.loads(run.stdout), node.parse_packet(node.DEMO_PACKET).to_dict())
+        self.assertEqual(state.get('request'), node.make_request())
+        self.assertNotIn('error', state)
 
     def test_node_info_tls_round_trip(self):
         with patch.object(legacy, 'FRAME', node.DEMO_PACKET):

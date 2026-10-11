@@ -1,6 +1,6 @@
-# 無料第2回：ノード情報パケットの検証記録
+# 無料第2・3回：ノード情報パケットの検証記録
 
-記事：`../../articles/symbol-p2p-packets-python.md`（`published: false`）。サンプル：`node_info.py`、テスト：`test_node_info.py`。第1回のコード・テスト・記事は変更していない。コミット・push・公開操作は行っていない。
+記事：`../../articles/symbol-p2p-node-info.md`（第3回）、`../../articles/symbol-p2p-packets-python.md`（第2回）（`published: false`）。サンプル：`node_info.py`、テスト：`test_node_info.py`。第1回のコードとテストは変更していない。第1回記事はテスト対象を明示するコマンドだけ調整した。コミット・push・公開操作は行っていない。
 
 ## 一次ソースとの照合
 
@@ -52,7 +52,7 @@ python3 node_info.py --demo
 python3 -m unittest test_node_info.NodeInfoTests -v
 ```
 
-結果：20 件成功。デモ出力は記事の JSON と一致。
+結果：23 件成功。デモ出力は記事の JSON と一致。
 
 ルートの制作環境から、TLS と第1回の回帰テストも含めて実行したコマンド：
 
@@ -61,9 +61,9 @@ PATH=/home/harvestasya/symbol/client/catapult/deps/openssl/bin:$PATH \
   python3 -m unittest discover -s zenn/examples/symbol-p2p -v
 ```
 
-結果：34 件成功（第1回 13、第2回 21）。通常の環境ではサンプルのディレクトリで `python3 -m unittest -v` を使う。第2回の TLS テストは第1回の証明書セットアップとループバックサーバーを再利用するが、第1回のファイルは編集しない。
+結果：38 件成功（第1回 13、ノード情報 25）。通常の環境ではサンプルのディレクトリで `python3 -m unittest -v` を使う。ノード情報の TLS テストは第1回の証明書セットアップとループバックサーバーを再利用するが、第1回のファイルは編集しない。
 
-| 第2回の確認範囲 | 結果 |
+| ノード情報の確認範囲 | 結果 |
 | --- | --- |
 | 固定要求バイト列 | `0800000011010000` と一致 |
 | 各フィールドの値 | 手書きの固定パケットを解析し、整数・32 bytes 配列・名前を個別に照合 |
@@ -74,7 +74,7 @@ PATH=/home/harvestasya/symbol/client/catapult/deps/openssl/bin:$PATH \
 | 分割受信 | 1〜102 bytes 単位で同じ結果。後続パケットを読み込まない |
 | 切断 | デモの各位置での切断をオフラインの完全パケット解析とストリーム受信の両方で検査 |
 | 期限 | ヘッダー受信後に期限が切れた場合は本文を読まずに失敗 |
-| CLI | オフライン JSON 出力、接続時の CA 未指定の拒否 |
+| CLI | オフライン JSON 出力、接続時の CA 未指定の拒否、TLS モックへの CLI 取得 |
 | TLS 模擬通信 | TLS 1.3 で実際に要求 `0x111` を送信。分割した模擬応答を query() が解析 |
 
 TLS の模擬サーバーは通常の OpenSSL 相互認証を使い、Catapult 本体や独自証明書コールバックを実行しない。固定パケットの往復試験は暗号化経路と受信コードの確認であり、実ノードが同じ値を返したという証拠ではない。
@@ -102,3 +102,14 @@ TLS の模擬サーバーは通常の OpenSSL 相互認証を使い、Catapult �
 - **接続先の実装版**：固定コミットの構造のみ確認。将来のフィールド追加は現在の厳密な長さ検証では拒否する可能性がある。
 - **並列要求・再接続・複数ノード監視**：未実装。今回は 1 接続で 1 要求のみ。返された host に自動接続する処理もない。
 - **Catapult を丸ごと用いた統合テスト**：未実施。C++ のサイズ確認はコンパイルしたヘッダーの確認であり、サーバー通信の確認ではない。
+
+## ノード情報取得の記事向けの追加確認
+
+- `client/catapult/extensions/nodediscovery/src/api/RemoteNodeApi.cpp`：本文なし要求、単一 NetworkNode の解析。Pull Peers のメソッドは今回実装しない。
+- `client/catapult/src/catapult/ionet/NodeVersion.cpp`：major / minor / revision / build を上位から詰める。0x01020304 → 1.2.3.4 の表示を確認。
+- `client/catapult/src/catapult/ionet/NodeRoles.h`：Peer / Api / Voting / IPv4 / IPv6 のフラグを表示。未知ビットを保持。
+- `client/rest/src/routes/nodeRoutes.js`：`/node/info` は Pull Ping を送って応答をデコードし、設定由来の nodePublicKey を追加。NetworkNode 自体に nodePublicKey フィールドはない。
+- `client/rest/src/sockets/nodeInfoCodec.js`：IdentityKey は REST の publicKey に対応。
+- `openapi/spec/core/node/schemas/NodeInfoDTO.yml`：REST のフィールドを照合。REST を呼び出した実測比較ではない。
+
+表示の追加テストはバージョンの 0 / 最大値、複合・未知ロール、既知・未知ネットワークを対象とした。CLI の TLS 取得テストも追加し、モックが受けた要求と出力 JSON を照合した。
