@@ -1,3 +1,10 @@
 __pycache__/
 cert/
 peer-ca.crt.pem
+*.keylog
+*.pcap
+*.pcapng
+*.bin
+*.hex
+capture-private/
+generated-fixtures/
