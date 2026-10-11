@@ -1,11 +1,21 @@
 # Symbol P2P 通信のサンプル
 
-記事の回ごとにディレクトリを分けています。各回の README にある実行手順を、そのディレクトリで実行してください。依存ファイルは各回に同梱しているため、他の回からコピーする必要はありません。
+記事の回ごとにディレクトリを分けています。各回の README にある実行手順を、そのディレクトリで実行してください。Python の依存ファイルは各回に同梱し、クライアント証明書と生成スクリプトは `common/` にまとめています。
 
 ```bash
 git clone https://github.com/ccHarvestasya/zenn-examples.git
 cd zenn-examples/symbol-p2p/01-connect
 ```
+
+## 共通のクライアント証明書
+
+初回に一度だけ生成します。上のコマンドで `01-connect/` に移動した状態で実行してください。
+
+```bash
+bash ../common/generate_certificates.sh
+```
+
+生成先は `symbol-p2p/common/cert/` です。詳しい手順は [common/README.md](common/README.md) にあります。CA 証明書は3650日、Node 証明書は365日有効です。各回のコードはこの証明書を既定で読み込みます。既存の証明書は上書きせず、回ごとに異なる鍵を作らずに使い回します。
 
 | 回 | ディレクトリ | テーマ |
 | --- | --- | --- |

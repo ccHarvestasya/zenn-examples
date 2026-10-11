@@ -1,11 +1,14 @@
 """Read Catapult Finalization Statistics and Proof over P2P (not a verifier)."""
 import argparse
+from pathlib import Path
 import json
 import struct
 import sys
 
 from chain_statistics import ProtocolError, make_context
 from p2p_common import exchange, packet
+
+CERT_DIRECTORY = Path(__file__).resolve().parent.parent / "common" / "cert"
 
 STATISTICS = 0x132
 PROOF_AT_EPOCH = 0x133
@@ -83,8 +86,8 @@ def main() -> int:
     parser.add_argument('--host', help='認証済みの接続先')
     parser.add_argument('--port', type=int, default=7900)
     parser.add_argument('--peer-ca')
-    parser.add_argument('--cert', default='cert/node.full.crt.pem')
-    parser.add_argument('--key', default='cert/node.key.pem')
+    parser.add_argument('--cert', default=str(CERT_DIRECTORY / "node.full.crt.pem"))
+    parser.add_argument('--key', default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if not args.demo and (not args.host or not args.peer_ca):
         parser.error('実ノード要求には --host と --peer-ca が必要です')

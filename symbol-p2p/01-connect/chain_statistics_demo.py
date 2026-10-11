@@ -1,11 +1,14 @@
 """Learning example: query Chain_Statistics without authenticating the peer."""
 import argparse
+from pathlib import Path
 from dataclasses import dataclass
 import socket
 import ssl
 import struct
 import sys
 import time
+
+CERT_DIRECTORY = Path(__file__).resolve().parent.parent / "common" / "cert"
 
 HEADER = struct.Struct("<II")
 STATISTICS = struct.Struct("<QQQQ")
@@ -85,8 +88,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("host")
     parser.add_argument("--port", type=int, default=7900)
-    parser.add_argument("--cert", default="cert/node.full.crt.pem")
-    parser.add_argument("--key", default="cert/node.key.pem")
+    parser.add_argument("--cert", default=str(CERT_DIRECTORY / "node.full.crt.pem"))
+    parser.add_argument("--key", default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port は 1〜65535 で指定してください")

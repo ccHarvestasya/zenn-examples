@@ -1,5 +1,6 @@
 """Read one Symbol Node_Discovery_Pull_Ping response (or an offline fixture)."""
 import argparse
+from pathlib import Path
 from dataclasses import dataclass
 import json
 import socket
@@ -8,6 +9,8 @@ import sys
 import time
 
 from chain_statistics import HEADER, ProtocolError, TIMEOUT, make_context, recv_exact
+
+CERT_DIRECTORY = Path(__file__).resolve().parent.parent / "common" / "cert"
 
 PULL_PING = 0x111
 NODE_FIXED = struct.Struct("<II32s32sIHBBB")
@@ -135,8 +138,8 @@ def main() -> int:
     mode.add_argument("--host", help="接続先のホスト名または IP")
     parser.add_argument("--port", type=int, default=7900)
     parser.add_argument("--peer-ca")
-    parser.add_argument("--cert", default="cert/node.full.crt.pem")
-    parser.add_argument("--key", default="cert/node.key.pem")
+    parser.add_argument("--cert", default=str(CERT_DIRECTORY / "node.full.crt.pem"))
+    parser.add_argument("--key", default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port は 1〜65535 で指定してください")

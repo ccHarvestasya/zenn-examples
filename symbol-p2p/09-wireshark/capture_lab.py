@@ -31,7 +31,7 @@ def run_lab(port: int, keylog=None) -> dict:
         for name in ('client', 'server'):
             path = directory / name
             path.mkdir()
-            subprocess.run(['bash', str(ROOT / 'generate_certificates.sh')],
+            subprocess.run(['bash', str(ROOT.parent / 'common/generate_certificates.sh'), str(path / 'cert')],
                            cwd=path, check=True, capture_output=True)
         client_cert = directory / 'client/cert'
         server_cert = directory / 'server/cert'

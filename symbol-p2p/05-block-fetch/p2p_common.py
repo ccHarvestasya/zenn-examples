@@ -1,4 +1,4 @@
-"""Bounded one-shot P2P I/O; reuses the first article's authenticated TLS setup."""
+"""Bounded one-shot P2P I/O; uses this lesson's TLS setup."""
 from contextlib import contextmanager
 import socket
 import time

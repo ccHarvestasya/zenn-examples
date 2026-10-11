@@ -8,6 +8,8 @@ import sys
 from entities import transaction_header
 from p2p_common import MAX_PACKET, ProtocolError, connection, make_context, packet, write_packet
 
+CERT_DIRECTORY = Path(__file__).resolve().parent.parent / "common" / "cert"
+
 PUSH_TRANSACTIONS = 9
 
 
@@ -40,8 +42,8 @@ def main() -> int:
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=7900)
     parser.add_argument('--peer-ca')
-    parser.add_argument('--cert', default='cert/node.full.crt.pem')
-    parser.add_argument('--key', default='cert/node.key.pem')
+    parser.add_argument('--cert', default=str(CERT_DIRECTORY / "node.full.crt.pem"))
+    parser.add_argument('--key', default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if args.send and (not args.confirm_private_network or not args.peer_ca):
         parser.error('--send には --confirm-private-network と --peer-ca が必要です')

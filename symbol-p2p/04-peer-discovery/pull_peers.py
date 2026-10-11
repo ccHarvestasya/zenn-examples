@@ -1,5 +1,6 @@
 """Read Symbol Node_Discovery_Pull_Peers without REST."""
 import argparse
+from pathlib import Path
 import json
 import socket
 import struct
@@ -8,6 +9,8 @@ import time
 
 from chain_statistics import HEADER, ProtocolError, TIMEOUT, make_context, recv_exact
 from node_info import DEMO_PACKET, NODE_FIXED, parse_payload
+
+CERT_DIRECTORY = Path(__file__).resolve().parent.parent / "common" / "cert"
 
 PULL_PEERS = 0x113
 MIN_NODE_SIZE = NODE_FIXED.size
@@ -89,8 +92,8 @@ def main() -> int:
     mode.add_argument("--host", help="既知の接続先")
     parser.add_argument("--port", type=int, default=7900)
     parser.add_argument("--peer-ca")
-    parser.add_argument("--cert", default="cert/node.full.crt.pem")
-    parser.add_argument("--key", default="cert/node.key.pem")
+    parser.add_argument("--cert", default=str(CERT_DIRECTORY / "node.full.crt.pem"))
+    parser.add_argument("--key", default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port は 1〜65535 で指定してください")

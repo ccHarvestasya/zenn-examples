@@ -1,5 +1,6 @@
 """Fetch/decode one block. Computed hash is not proof of block validity."""
 import argparse
+from pathlib import Path
 import hashlib
 import json
 import struct
@@ -7,6 +8,8 @@ import sys
 
 from entities import entity_header, transaction_header
 from p2p_common import ProtocolError, exchange, make_context, packet
+
+CERT_DIRECTORY = Path(__file__).resolve().parent.parent / "common" / "cert"
 
 PULL_BLOCK = 4
 HEADER_SIZES = {0x8043: 424, 0x8143: 376, 0x8243: 424}
@@ -69,8 +72,8 @@ def main() -> int:
     mode.add_argument('--host')
     parser.add_argument('--port', type=int, default=7900)
     parser.add_argument('--peer-ca')
-    parser.add_argument('--cert', default='cert/node.full.crt.pem')
-    parser.add_argument('--key', default='cert/node.key.pem')
+    parser.add_argument('--cert', default=str(CERT_DIRECTORY / "node.full.crt.pem"))
+    parser.add_argument('--key', default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if args.host and not args.peer_ca:
         parser.error('--peer-ca が必要です')
