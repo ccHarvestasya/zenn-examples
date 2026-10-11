@@ -45,7 +45,7 @@ class TLSTests(unittest.TestCase):
         for name in ('client', 'server'):
             directory = cls.base / name
             directory.mkdir()
-            subprocess.run(['bash', str(ROOT / 'generate_certificates.sh')],
+            subprocess.run(['bash', str(ROOT.parent / 'common/generate_certificates.sh'), str(directory / 'cert')],
                            cwd=directory, check=True, capture_output=True)
 
     @classmethod
