@@ -1,6 +1,8 @@
 # 無料第1回：技術検証結果と未検証事項
 
-対象：`../../articles/symbol-p2p-python.md` と、このディレクトリの無料サンプル。記事は `published: false`。公開・配布操作は行っていない。
+この文書は CA ファイルを使う実装の過去の検証記録です。現在の第1回の学習用コードは、[第1回の検証記録](../01-connect/DEMO_VALIDATION.md) を参照してください。
+
+対象：[第1回の旧稿](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-01-connect.md) と、このディレクトリの無料サンプル。記事は `published: false`。公開・配布操作は行っていない。
 
 ## 確認した仕様
 
@@ -42,7 +44,7 @@
 
 ```bash
 PATH=/home/harvestasya/symbol/client/catapult/deps/openssl/bin:$PATH \
-  python3 -m unittest discover -s zenn/examples/symbol-p2p -v
+  python3 zenn/examples/tests/run_tests.py
 ```
 
 サンプルのディレクトリでの通常のコマンド：

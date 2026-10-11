@@ -18,7 +18,7 @@ FRAME = bytes.fromhex(
     '7b00000000000000 7800000000000000'
     '0100000000000000 0200000000000000'
 )
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parents[3] / "symbol-p2p" / pathlib.Path(__file__).resolve().parent.name
 
 
 class Stream:

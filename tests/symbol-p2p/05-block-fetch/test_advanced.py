@@ -10,16 +10,12 @@ import threading
 import time
 import unittest
 from unittest.mock import MagicMock, patch
-
-import capture_lab
 from fixture_data import block_fixture, transaction_fixture
 import p2p_common as common
 import pull_block
-import push_transaction
-import test_chain_statistics as legacy
+import tls_test_support as legacy
 
-ROOT = pathlib.Path(__file__).resolve().parent
-
+ROOT = pathlib.Path(__file__).resolve().parents[3] / "symbol-p2p" / pathlib.Path(__file__).resolve().parent.name
 
 class BlockTests(unittest.TestCase):
     def test_request_height_and_endian(self):
@@ -128,63 +124,6 @@ class CommonTests(unittest.TestCase):
         sock.sendall.assert_not_called()
 
 
-class PushTests(unittest.TestCase):
-    def test_push_wire_bytes(self):
-        tx = transaction_fixture()
-        self.assertEqual(push_transaction.make_request(tx), bytes.fromhex('a800000009000000') + tx)
-
-    def test_invalid_payloads(self):
-        for tx in (b'', transaction_fixture()[:-1], bytes(160)):
-            with self.assertRaises(common.ProtocolError):
-                push_transaction.make_request(tx)
-        for start, size in ((8, 64), (72, 32)):
-            data = bytearray(transaction_fixture())
-            data[start:start+size] = bytes(size)
-            with self.assertRaises(common.ProtocolError):
-                push_transaction.make_request(bytes(data))
-
-    def test_dry_run_never_connects(self):
-        with tempfile.TemporaryDirectory() as work:
-            path = pathlib.Path(work) / 'tx.hex'
-            path.write_text(transaction_fixture().hex())
-            with patch.object(sys, 'argv', ['push_transaction.py', str(path)]), \
-                 patch.object(push_transaction, 'connection') as connect, \
-                 patch.object(push_transaction, 'make_context') as context:
-                self.assertEqual(push_transaction.main(), 0)
-                connect.assert_not_called()
-                context.assert_not_called()
-
-    def test_explicit_flags_and_loopback_guard(self):
-        with patch.object(push_transaction, 'connection') as connect:
-            for flags in ({}, {'enabled': True}, {'private_network': True}):
-                with self.assertRaises(ValueError):
-                    push_transaction.send_transaction(transaction_fixture(), '127.0.0.1', 7900, None, **flags)
-            for host in ('192.168.1.1', '8.8.8.8', 'localhost'):
-                with self.assertRaises(ValueError):
-                    push_transaction.send_transaction(transaction_fixture(), host, 7900, None,
-                                                       enabled=True, private_network=True)
-            connect.assert_not_called()
-
-    def test_mainnet_refused(self):
-        tx = bytearray(transaction_fixture())
-        tx[109] = 0x68
-        with patch.object(push_transaction, 'connection') as connect:
-            with self.assertRaises(ValueError):
-                push_transaction.send_transaction(bytes(tx), '127.0.0.1', 7900, None,
-                                                   enabled=True, private_network=True)
-            connect.assert_not_called()
-
-    def test_send_branch_uses_only_in_memory_mock_no_ack(self):
-        tls = MagicMock()
-        with patch.object(push_transaction, 'connection') as connect:
-            connect.return_value.__enter__.return_value = (tls, time.monotonic()+10)
-            push_transaction.send_transaction(transaction_fixture(), '127.0.0.1', 7900, None,
-                                               enabled=True, private_network=True)
-        tls.sendall.assert_called_once_with(push_transaction.make_request(transaction_fixture()))
-        tls.recv.assert_not_called()
-        # No socket/TLS server is used and no transaction is actually transmitted.
-
-
 class BlockTLSTests(unittest.TestCase):
     setUpClass = classmethod(legacy.TLSTests.setUpClass.__func__)
     tearDownClass = classmethod(legacy.TLSTests.tearDownClass.__func__)
@@ -237,29 +176,5 @@ class BlockTLSTests(unittest.TestCase):
         self.assertNotIn('error', state)
 
 
-class CaptureTests(unittest.TestCase):
-    def test_keylog_new_file_permissions_and_no_overwrite(self):
-        with tempfile.TemporaryDirectory() as work:
-            path = pathlib.Path(work)/'secret.keylog'
-            capture_lab.reserve_keylog(str(path))
-            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
-            with self.assertRaises(FileExistsError):
-                capture_lab.reserve_keylog(str(path))
-
-    def test_owned_lab_with_and_without_keylog(self):
-        with tempfile.TemporaryDirectory() as work:
-            path = pathlib.Path(work)/'secret.keylog'
-            first = capture_lab.run_lab(0)
-            second = capture_lab.run_lab(0, str(path))
-            self.assertFalse(first['keylog_enabled'])
-            self.assertTrue(second['keylog_enabled'])
-            self.assertEqual(second['tls'], 'TLSv1.3')
-            self.assertEqual(second['request_hex'], '0800000011010000')
-            self.assertEqual(second['response_size'], 102)
-            self.assertGreater(path.stat().st_size, 0)
-            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
-            # Do not print/read keys into test logs.
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

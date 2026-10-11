@@ -1,6 +1,8 @@
 # 無料第2・3回：ノード情報パケットの検証記録
 
-記事：`../../articles/symbol-p2p-node-info.md`（第3回）、`../../articles/symbol-p2p-packets-python.md`（第2回）（`published: false`）。サンプル：`node_info.py`、テスト：`test_node_info.py`。第1回のコードとテストは変更していない。第1回記事はテスト対象を明示するコマンドだけ調整した。コミット・push・公開操作は行っていない。
+この文書は分割前の検証記録です。現在は、この回のディレクトリで実行します。テスト用のストリームとTLSサーバーは `tls_test_support.py` にあります。
+
+記事：[第3回](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-03-node-info.md)、[第2回](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-02-packet-decode.md)（`published: false`）。サンプル：`node_info.py`、テスト：`test_node_info.py`。第1回のコードとテストは変更していない。第1回記事はテスト対象を明示するコマンドだけ調整した。コミット・push・公開操作は行っていない。
 
 ## 一次ソースとの照合
 

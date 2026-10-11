@@ -8,9 +8,9 @@ import unittest
 from unittest.mock import patch
 
 import node_info as node
-import test_chain_statistics as legacy
+import tls_test_support as legacy
 
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parents[3] / "symbol-p2p" / pathlib.Path(__file__).resolve().parent.name
 
 
 def replace_u32(packet, offset, value):
