@@ -2,22 +2,27 @@
 
 [記事原稿](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-08-transaction-announce.md)
 
-リポジトリ取得後、`symbol-p2p/08-transaction-announce/` に移動して実行します。このディレクトリに必要な Python の依存ファイルを同梱しています。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
+リポジトリ取得後、`symbol-p2p/08-transaction-announce/` に移動します。Python 3.12 以上と Python 版 Symbol SDK 3.3.2 を使用します。
 
 ```bash
-python3 fixture_data.py generated-fixtures
-python3 push_transaction.py generated-fixtures/transaction.hex
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+python3 prepare_transfer.py signed-transaction.hex
+python3 push_transaction.py testnet1.symbol-mikun.net signed-transaction.hex --port 7900
 ```
 
-上のコマンドはパケットを構築・表示するだけで、送信しません。生成するデータの署名は無効です。送信には私設ネットワークと明示的な実行オプションが必要です。
+既定では署名と形式を検査し、パケットを組み立てるだけで接続しません。作成コードは、環境変数 `SYMBOL_PRIVATE_KEY` があればその鍵を、なければメモリ内で生成する一時鍵を使用します。秘密鍵は保存・表示しません。一時アカウントには残高がなく、送信前チェック用です。
 
-クライアント証明書は各回で共通の `../common/cert/` を使います。まだ作成していない場合だけ、`bash ../common/generate_certificates.sh` を実行してください。回ごとに鍵を作り直す必要はありません。
+実送信には、手数料を支払える残高を持つTestnetアカウントの署名済みペイロードを使い、`--send` を付けます。詳細は記事の実行手順を参照してください。公開ノードでの送信・受理・ブロック取り込みは未検証です。
+
+クライアント証明書は共通の `../common/cert/` を使います。まだ作成していない場合だけ、`bash ../common/generate_certificates.sh` を実行してください。
+
+第1〜7回と同じく、接続先の証明書検証は `CERT_NONE` で省略しています。送信の完了だけで受理・ブロック取り込みは確認できません。
 
 ## ファイル
 
-- [chain_statistics.py](chain_statistics.py)
-- [entities.py](entities.py)
-- [fixture_data.py](fixture_data.py)
-- [p2p_common.py](p2p_common.py)
-- [push_transaction.py](push_transaction.py)
-
+- [prepare_transfer.py](prepare_transfer.py)：SDKで署名済みの自己宛てTransferを作成
+- [push_transaction.py](push_transaction.py)：取引の形式・署名の検査とP2P送信
+- [p2p_common.py](p2p_common.py)：TLS設定とパケット送受信
+- [requirements.txt](requirements.txt)：SDKのバージョン
