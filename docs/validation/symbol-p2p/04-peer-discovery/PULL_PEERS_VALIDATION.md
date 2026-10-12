@@ -39,3 +39,7 @@ PATH=/home/harvestasya/symbol/client/catapult/deps/openssl/bin:$PATH python3 -m 
 ```
 
 ソースの照合先は記事に記載した固定コミット `dbff03b4096622d1bc1fce611358e05cfa7b0296`。NodeDiscoveryHandlers.cppのバッチ生成、HandlerFactory.hの空応答、nodePeersCodec.jsの連続レコード解析を確認した。
+
+## サンプルの単一ファイル化
+
+TLS・受信処理とNetworkNodeパーサーを `pull_peers.py` にまとめ、依存先の `node_info.py` を削除した。記事の全文コードとREADMEを更新し、関連テスト16件が成功。

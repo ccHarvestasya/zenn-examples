@@ -10,7 +10,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-import node_info as client
+import pull_peers as client
 
 FRAME = b""  # Each test supplies its response packet.
 ROOT = pathlib.Path(__file__).resolve().parents[3] / "symbol-p2p" / pathlib.Path(__file__).resolve().parent.name

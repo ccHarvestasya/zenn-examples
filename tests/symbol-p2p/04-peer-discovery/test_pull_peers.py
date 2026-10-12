@@ -89,7 +89,7 @@ class PeerTests(unittest.TestCase):
                 client.read_peers(support.Stream(packet[:size]), time.monotonic() + 1)
 
     def test_deadline_expires_between_header_and_body(self):
-        with patch('node_info.time.monotonic', side_effect=[0.0, 2.0]):
+        with patch('pull_peers.time.monotonic', side_effect=[0.0, 2.0]):
             with self.assertRaises(TimeoutError):
                 client.read_peers(support.Stream(frame(NODE)), 1.0)
 

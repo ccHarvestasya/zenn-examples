@@ -2,7 +2,7 @@
 
 [記事原稿](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-04-peer-discovery.md)
 
-リポジトリ取得後、`symbol-p2p/04-peer-discovery/` に移動して実行します。必要な通信処理とノード情報のパーサーを同梱しています。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
+リポジトリ取得後、`symbol-p2p/04-peer-discovery/` に移動して実行します。`pull_peers.py` に必要な通信処理とノード情報のパーサーを含めています。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
 
 共通のクライアント証明書を用意してから、接続先を指定して実行します。
 
@@ -19,4 +19,3 @@ python3 pull_peers.py testnet1.symbol-mikun.net --port 7900
 ## ファイル
 
 - [pull_peers.py](pull_peers.py)
-- [node_info.py](node_info.py)：TLS 設定、受信処理、NetworkNode の解析
