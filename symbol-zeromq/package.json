@@ -1,0 +1,21 @@
+{
+  "name": "symbol-zeromq-examples",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "node --test test/*.test.ts",
+    "demo": "node demo.ts"
+  },
+  "dependencies": {
+    "symbol-sdk": "3.3.3",
+    "zeromq": "6.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "typescript": "7.0.2"
+  }
+}
