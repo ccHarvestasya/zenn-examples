@@ -115,3 +115,34 @@ TLS の模擬サーバーは通常の OpenSSL 相互認証を使い、Catapult �
 - `openapi/spec/core/node/schemas/NodeInfoDTO.yml`：REST のフィールドを照合。REST を呼び出した実測比較ではない。
 
 表示の追加テストはバージョンの 0 / 最大値、複合・未知ロール、既知・未知ネットワークを対象とした。CLI の TLS 取得テストも追加し、モックが受けた要求と出力 JSON を照合した。
+
+## 第3回の実ノード接続（2026-10-12）
+
+第1・2回と同じ CLI と `CERT_NONE` の接続に統一。共通の証明書と秘密鍵を使い、`03-node-info/` で `python3 node_info.py testnet1.symbol-mikun.net --port 7900` を実行した。取得日時は2026-10-12 10:40 JST。Python 3.12.3 / OpenSSL 3.5.2。
+
+```json
+{
+  "node_size": 117,
+  "version": "0x01000309",
+  "version_text": "1.0.3.9",
+  "identity_key": "07B29046E1E45B5162319EA40E271A8ECC1073C73F6881AF528895AE3685856F",
+  "generation_hash_seed": "49D6E1CE276A85B70EAFE52349AACCA389302E7A9754BCF1221E79494FC665A4",
+  "roles": "0x00000007",
+  "role_names": [
+    "Peer",
+    "API",
+    "Voting"
+  ],
+  "port": 7900,
+  "network_identifier": "0x98",
+  "network_name": "Testnet",
+  "host_size": 25,
+  "friendly_name_size": 11,
+  "host": "testnet1.symbol-mikun.net",
+  "friendly_name": "mikun_test1",
+  "host_hex": "746573746e6574312e73796d626f6c2d6d696b756e2e6e6574",
+  "friendly_name_hex": "6d696b756e5f7465737431"
+}
+```
+
+ノード情報117バイト、応答全体125バイト。`--demo` と `--peer-ca` は読者向けコードから削除し、固定パケットは開発用の `node_fixture.py` に配置した。

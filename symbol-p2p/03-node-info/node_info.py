@@ -1,14 +1,20 @@
-"""Read one Symbol Node_Discovery_Pull_Ping response (or an offline fixture)."""
+"""Read one Symbol Node_Discovery_Pull_Ping response over TLS."""
 import argparse
 from pathlib import Path
 from dataclasses import dataclass
 import json
 import socket
+import ssl
 import struct
 import sys
 import time
 
-from chain_statistics import HEADER, ProtocolError, TIMEOUT, make_context, recv_exact
+HEADER = struct.Struct("<II")
+TIMEOUT = 10.0
+
+
+class ProtocolError(ValueError):
+    pass
 
 CERT_DIRECTORY = Path(__file__).resolve().parent.parent / "common" / "cert"
 
@@ -17,16 +23,31 @@ NODE_FIXED = struct.Struct("<II32s32sIHBBB")
 MIN_PACKET_SIZE = HEADER.size + NODE_FIXED.size
 MAX_PACKET_SIZE = MIN_PACKET_SIZE + 2 * 255
 
-# Synthetic packet: test-network identifier, deliberately fictitious key/seed.
-DEMO_PACKET = bytes.fromhex(
-    "66000000 11010000 5e000000 04030201"
-    "000102030405060708090a0b0c0d0e0f"
-    "101112131415161718191a1b1c1d1e1f"
-    "202122232425262728292a2b2c2d2e2f"
-    "303132333435363738393a3b3c3d3e3f"
-    "01000000 dc1e 98 09 04"
-    "6c6f63616c686f7374 6e6f6465"
-)
+
+def recv_exact(sock, size: int, deadline: float) -> bytes:
+    data = bytearray()
+    while len(data) < size:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError("応答全体の受信がタイムアウトしました")
+        sock.settimeout(remaining)
+        chunk = sock.recv(size - len(data))
+        if not chunk:
+            raise ConnectionError(f"受信途中で切断されました: {len(data)}/{size} bytes")
+        data.extend(chunk)
+    return bytes(data)
+
+
+def make_context(cert: str, key: str) -> ssl.SSLContext:
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    # Learning example only: the peer certificate is NOT verified.
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    context.minimum_version = ssl.TLSVersion.TLSv1_3
+    context.maximum_version = ssl.TLSVersion.TLSv1_3
+    context.set_ecdh_curve("X25519")
+    context.load_cert_chain(certfile=cert, keyfile=key)
+    return context
 
 
 @dataclass(frozen=True)
@@ -133,24 +154,16 @@ def query(host: str, port: int, context) -> NodeInfo:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--demo", action="store_true", help="通信せず模擬パケットを解析")
-    mode.add_argument("--host", help="接続先のホスト名または IP")
+    parser.add_argument("host", help="接続先のホスト名または IP")
     parser.add_argument("--port", type=int, default=7900)
-    parser.add_argument("--peer-ca")
     parser.add_argument("--cert", default=str(CERT_DIRECTORY / "node.full.crt.pem"))
     parser.add_argument("--key", default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port は 1〜65535 で指定してください")
-    if args.host and not args.peer_ca:
-        parser.error("接続には --peer-ca が必要です")
     try:
-        if args.demo:
-            result = parse_packet(DEMO_PACKET)
-        else:
-            context = make_context(args.peer_ca, args.cert, args.key)
-            result = query(args.host, args.port, context)
+        context = make_context(args.cert, args.key)
+        result = query(args.host, args.port, context)
     except (OSError, ValueError) as exc:
         print(f"取得・解析失敗: {exc}", file=sys.stderr)
         return 1
