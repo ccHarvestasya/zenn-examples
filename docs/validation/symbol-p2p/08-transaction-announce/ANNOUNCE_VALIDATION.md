@@ -49,3 +49,9 @@ PATH=/home/harvestasya/symbol/client/catapult/deps/openssl/bin:$PATH /tmp/symbol
 SDKのcreate/sign/attach/verifyはインストール済み3.3.2の実装で確認。固定コミットdbff03b4096622d1bc1fce611358e05cfa7b0296のTransactionHandlers.cppとHandlerUtils.hで、Pushが応答を返さず後続処理へ渡されることを確認した。
 
 旧chain_statistics.pyとentities.pyを削除し、TLS処理をp2p_common.pyへ統合。署名が無効なfixture_data.pyは開発用テストへ移動。記事の3ファイルの全文コードと実ファイル、出力例との一致を確認した。
+
+## Transfer V1 に限定する修正
+
+SDK 3.3.2 の verify_transaction() は Aggregate の開始者署名だけを検証し、内部取引のハッシュ再計算や連署検証は行わない。第8回の入力を通常 Transfer V1 に限定し、対象外は接続前に拒否するよう修正。
+
+回帰テストでは署名済み Aggregate Complete V3 / Bonded V3 を作成し、内部 Transfer のメッセージを同じ長さで変更した。transactions_hash が再計算結果と異なっても開始者の署名検証が成功することを確認したうえで、改変の有無によらず送信処理が拒否し、接続を呼ばないことを確認した。Transfer の改変拒否とローカル TLS 送信も含め、14件のテストが成功。公開ノードへは取引を送信していない。

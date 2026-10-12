@@ -14,6 +14,9 @@ from fixture_data import block_fixture, transaction_fixture
 import p2p_common as common
 import push_transaction
 from prepare_transfer import create_transfer
+from symbolchain import sc
+from symbolchain.CryptoTypes import PrivateKey, Signature
+from symbolchain.facade.SymbolFacade import SymbolFacade
 import tls_test_support as legacy
 
 ROOT = pathlib.Path(__file__).resolve().parents[3] / "symbol-p2p" / pathlib.Path(__file__).resolve().parent.name
@@ -66,6 +69,38 @@ class PushTests(unittest.TestCase):
             data[offset] ^= 1
             with self.subTest(offset=offset), self.assertRaises(common.ProtocolError):
                 push_transaction.make_request(bytes(data))
+
+    def test_aggregate_rejected_even_with_valid_initiator_signature(self):
+        facade = SymbolFacade('testnet')
+        key_pair = facade.KeyPair(PrivateKey.random())
+        embedded = facade.transaction_factory.create_embedded({
+            'type': 'transfer_transaction_v1',
+            'signer_public_key': key_pair.public_key,
+            'recipient_address': facade.network.public_key_to_address(key_pair.public_key),
+            'mosaics': [], 'message': b'\x00original',
+        })
+        for aggregate_type in ('aggregate_complete_transaction_v3', 'aggregate_bonded_transaction_v3'):
+            aggregate = facade.transaction_factory.create({
+                'type': aggregate_type,
+                'signer_public_key': key_pair.public_key,
+                'fee': 1000000, 'deadline': 1,
+                'transactions_hash': facade.hash_embedded_transactions([embedded]),
+                'transactions': [embedded], 'cosignatures': [],
+            })
+            signature = facade.sign_transaction(key_pair, aggregate)
+            facade.transaction_factory.attach_signature(aggregate, signature)
+            for tampered in (False, True):
+                tx = sc.TransactionFactory.deserialize(aggregate.serialize())
+                if tampered:
+                    tx.transactions[0].message = b'\x00modified'
+                    self.assertNotEqual(tx.transactions_hash.bytes,
+                                        facade.hash_embedded_transactions(tx.transactions).bytes)
+                self.assertTrue(facade.verify_transaction(tx, Signature(tx.signature.bytes)))
+                with self.subTest(type=aggregate_type, tampered=tampered), \
+                     patch.object(push_transaction, 'connection') as connect:
+                    with self.assertRaisesRegex(common.ProtocolError, 'Transfer V1'):
+                        push_transaction.send_transaction(tx.serialize(), 'host', 7900, None, enabled=True)
+                    connect.assert_not_called()
 
     def test_dry_run_never_connects(self):
         with tempfile.TemporaryDirectory() as work:

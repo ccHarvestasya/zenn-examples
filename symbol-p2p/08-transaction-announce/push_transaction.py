@@ -1,4 +1,4 @@
-"""Inspect a signed Testnet transaction; announce only with --send."""
+"""Inspect a signed Testnet Transfer V1; announce only with --send."""
 import argparse
 import json
 from pathlib import Path
@@ -20,6 +20,8 @@ def inspect_transaction(data):
             raise ValueError('トランザクションの長さまたは形式が不正です')
         if tx.network != sc.NetworkType.TESTNET:
             raise ValueError('このサンプルは Testnet の取引だけを扱います')
+        if not isinstance(tx, sc.TransferTransactionV1):
+            raise ValueError('このサンプルは通常の Transfer V1 だけを扱います')
         facade = SymbolFacade('testnet')
         if not facade.verify_transaction(tx, Signature(tx.signature.bytes)):
             raise ValueError('Testnet の generation hash seed を使った署名検証に失敗しました')

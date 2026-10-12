@@ -26,3 +26,5 @@ python3 push_transaction.py testnet1.symbol-mikun.net signed-transaction.hex --p
 - [push_transaction.py](push_transaction.py)：取引の形式・署名の検査とP2P送信
 - [p2p_common.py](p2p_common.py)：TLS設定とパケット送受信
 - [requirements.txt](requirements.txt)：SDKのバージョン
+
+入力は署名済みの Testnet 通常 Transfer V1 に限定します。Aggregate や他の種別・バージョンは接続前に拒否します。署名検証は残高・期限・ノードの受理を保証しません。
