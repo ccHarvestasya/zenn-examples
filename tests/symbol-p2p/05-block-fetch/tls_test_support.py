@@ -10,7 +10,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-import chain_statistics as client
+import p2p_common as client
 
 # Explicit wire bytes, with nonzero high and low halves of the score.
 FRAME = bytes.fromhex(
@@ -88,10 +88,9 @@ class TLSTests(unittest.TestCase):
         self.addCleanup(thread.join, 6)
         return port, thread, state
 
-    def context(self, trusted='server'):
+    def context(self):
         cert = self.base / 'client/cert'
-        return client.make_context(str(self.base / trusted / 'cert/ca.crt.pem'),
-                                   str(cert / 'node.full.crt.pem'), str(cert / 'node.key.pem'))
+        return client.make_context(str(cert / 'node.full.crt.pem'), str(cert / 'node.key.pem'))
 
 
 

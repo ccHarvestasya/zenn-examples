@@ -2,22 +2,28 @@
 
 [記事原稿](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-05-block-fetch.md)
 
-リポジトリ取得後、`symbol-p2p/05-block-fetch/` に移動して実行します。このディレクトリに必要な Python の依存ファイルを同梱しています。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
+リポジトリ取得後、`symbol-p2p/05-block-fetch/` に移動して実行します。必要な通信処理を同梱しています。ブロック本体は Python 版 Symbol SDK 3.3.2 で解析します。Python 3.12 以上を使用します。
 
 ```bash
-python3 fixture_data.py generated-fixtures
-python3 pull_block.py --file generated-fixtures/normal-block.bin --height 42
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
 ```
 
-上のコマンドは通信しないデモです。通信機能があるコードでは、同梱の `chain_statistics.py` が接続先の CA ファイルを使う TLS 設定を提供します。第1回の学習用コードとは設定が異なります。実ノードへの接続条件は記事を参照してください。
+共通のクライアント証明書を用意してから、接続先と取得したい高さを指定して実行します。
+
+```bash
+python3 pull_block.py testnet1.symbol-mikun.net --port 7900 --height 0
+```
+
+高さ `0` は接続先の最新高です。第1〜4回と同じく、Python 側では `CERT_NONE` で接続先の証明書検証を省略する学習用の接続です。ブロックの署名や VRF、TransactionsHash の検証も行いません。
+
+2026年10月12日に Testnet ノードから高さ `3795211` のブロックを取得しました。出力例は記事に掲載しています。
 
 クライアント証明書は各回で共通の `../common/cert/` を使います。まだ作成していない場合だけ、`bash ../common/generate_certificates.sh` を実行してください。回ごとに鍵を作り直す必要はありません。
 
 ## ファイル
 
-- [chain_statistics.py](chain_statistics.py)
-- [entities.py](entities.py)
-- [fixture_data.py](fixture_data.py)
-- [p2p_common.py](p2p_common.py)
-- [pull_block.py](pull_block.py)
-
+- [pull_block.py](pull_block.py)：Pull Block の要求、SDK によるブロック解析、CLI
+- [p2p_common.py](p2p_common.py)：TLS 設定、上限付きパケット送受信
+- [requirements.txt](requirements.txt)：使用する SDK のバージョン

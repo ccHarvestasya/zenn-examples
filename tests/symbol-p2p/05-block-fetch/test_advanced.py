@@ -24,14 +24,13 @@ class BlockTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 pull_block.make_request(height)
 
-    def test_layout_and_hash_golden(self):
+    def test_sdk_decodes_known_fields(self):
         result = pull_block.parse_block(block_fixture(), 42)
         self.assertEqual(result['height'], 42)
         self.assertEqual(result['timestamp_ms_since_network_epoch'], 123456)
         self.assertEqual(result['signer'], '22'*32)
         self.assertEqual(result['previous_block_hash'], '33'*32)
-        self.assertEqual(result['computed_hash'],
-                         'AA463BC7FDEA3F718E9D708B747A37C214F339D52BEE9AFCF52C80A0CEA70278')
+        self.assertEqual(result['type_name'], 'NORMAL')
 
     def test_all_block_kinds_and_footer_lengths(self):
         for kind, size in ((0x8043, 424), (0x8143, 376), (0x8243, 424)):
@@ -78,21 +77,15 @@ class BlockTests(unittest.TestCase):
         with self.assertRaises(common.ProtocolError):
             pull_block.parse_block(bytes(data))
 
-    def test_header_hash_not_full_body_hash(self):
-        first = block_fixture(transactions=(transaction_fixture(b'a'),))
-        second = block_fixture(transactions=(transaction_fixture(b'b'),))
-        self.assertEqual(pull_block.parse_block(first)['computed_hash'],
-                         pull_block.parse_block(second)['computed_hash'])
-        # This is why reading/computing a hash is not transaction Merkle validation.
+    def test_trailing_bytes_are_rejected(self):
+        with self.assertRaises(common.ProtocolError):
+            pull_block.parse_block(block_fixture() + b'trailing')
 
-    def test_block_cli_offline(self):
-        with tempfile.TemporaryDirectory() as work:
-            path = pathlib.Path(work) / 'block.bin'
-            path.write_bytes(block_fixture())
-            run = subprocess.run([sys.executable, str(ROOT/'pull_block.py'), '--file', str(path)],
-                                 capture_output=True, text=True, timeout=5)
-        self.assertEqual(run.returncode, 0, run.stderr)
-        self.assertEqual(json.loads(run.stdout)['height'], 42)
+    def test_cli_requires_host(self):
+        run = subprocess.run([sys.executable, str(ROOT/'pull_block.py')],
+                             capture_output=True, text=True, timeout=5)
+        self.assertEqual(run.returncode, 2)
+        self.assertIn('host', run.stderr)
 
 
 class CommonTests(unittest.TestCase):
@@ -165,6 +158,20 @@ class BlockTLSTests(unittest.TestCase):
         result = pull_block.query('127.0.0.1', port, self.context(), 42)
         thread.join(6)
         self.assertEqual(result['height'], 42)
+        self.assertEqual(state.get('request'), pull_block.make_request(42))
+        self.assertNotIn('error', state)
+
+    def test_block_cli_round_trip(self):
+        port, thread, state = self.serve_block(block_fixture())
+        cert = self.base / 'client/cert'
+        run = subprocess.run([
+            sys.executable, str(ROOT/'pull_block.py'), '127.0.0.1',
+            '--port', str(port), '--height', '42',
+            '--cert', str(cert/'node.full.crt.pem'), '--key', str(cert/'node.key.pem'),
+        ], capture_output=True, text=True, timeout=15)
+        thread.join(6)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertEqual(json.loads(run.stdout), pull_block.parse_block(block_fixture(), 42))
         self.assertEqual(state.get('request'), pull_block.make_request(42))
         self.assertNotIn('error', state)
 

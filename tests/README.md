@@ -2,9 +2,12 @@
 
 記事の読者向けコードは `../symbol-p2p/` にあります。このディレクトリは、サンプルを変更する開発者向けです。
 
-リポジトリルートから実行します。
+第5回の検証には Symbol SDK が必要です。リポジトリルートで仮想環境を作り、依存をインストールしてから実行します。
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r symbol-p2p/05-block-fetch/requirements.txt
 python3 tests/run_tests.py
 ```
 
