@@ -77,8 +77,7 @@ def query(host, port, context, kind, value=None):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument('--stats', action='store_true', help='Finalization Statistics')
+    mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--proof-height', type=int, help='指定高の Finalization Proof')
     mode.add_argument('--proof-epoch', type=int, help='指定 epoch の Finalization Proof')
     parser.add_argument('host', help='接続先のホスト名または IP')
@@ -89,7 +88,8 @@ def main() -> int:
     if not 1 <= args.port <= 65535:
         parser.error('port は1〜65535を指定してください')
     try:
-        kind = 'stats' if args.stats else ('height' if args.proof_height is not None else 'epoch')
+        kind = ('height' if args.proof_height is not None
+                else 'epoch' if args.proof_epoch is not None else 'stats')
         value = args.proof_height if kind == 'height' else args.proof_epoch
         make_request(kind, value)
         context = make_context(args.cert, args.key)

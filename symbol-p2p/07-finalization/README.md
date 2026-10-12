@@ -4,10 +4,10 @@
 
 リポジトリ取得後、`symbol-p2p/07-finalization/` に移動して実行します。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
 
-共通のクライアント証明書を用意してから、接続先と取得する情報を指定します。
+共通のクライアント証明書を用意してから、接続先を指定します。取得方法を指定しなければ統計を取得します。
 
 ```bash
-python3 finalization.py testnet1.symbol-mikun.net --port 7900 --stats
+python3 finalization.py testnet1.symbol-mikun.net --port 7900
 ```
 
 2026年10月12日に Testnet ノードから統計とエポック指定の Proof を取得しました。統計で返されたエポック・高さを使い、次のように要求できます。

@@ -93,8 +93,8 @@ class ParserTests(unittest.TestCase):
             common.read_packet(stream, 0x135, time.monotonic() + 1, sample.MAX_PROOF_PACKET)
         self.assertEqual(stream.data, b'body')
 
-    def test_cli_requires_host_and_mode(self):
-        for args in ([], ['host']):
+    def test_cli_requires_host(self):
+        for args in ([],):
             run = subprocess.run([sys.executable, str(ROOT/'finalization.py')] + args,
                                  capture_output=True, text=True, timeout=5)
             self.assertEqual(run.returncode, 2)
@@ -140,7 +140,7 @@ class FinalizationTLSTests(unittest.TestCase):
         port, thread, state = self.serve_reply(STATS, 0x132, 8)
         cert = self.base / 'client/cert'
         run = subprocess.run([
-            sys.executable, str(ROOT/'finalization.py'), '127.0.0.1', '--stats',
+            sys.executable, str(ROOT/'finalization.py'), '127.0.0.1',
             '--port', str(port), '--cert', str(cert/'node.full.crt.pem'),
             '--key', str(cert/'node.key.pem'),
         ], capture_output=True, text=True, timeout=15)
