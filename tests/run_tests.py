@@ -5,7 +5,6 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 DEMOS = {
-    '06-block-transactions': 'block_transactions.py',
     '07-finalization': 'finalization.py',
 }
 

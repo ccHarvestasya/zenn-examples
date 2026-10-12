@@ -44,3 +44,25 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+TRANSFER = 0x4154
+
+def demo_block():
+    # Synthetic values and invalid signatures: never broadcast this fixture.
+    ordinary = transaction_fixture(b"\x00hello")
+    embedded = bytearray(48 + len(ordinary) - 128)
+    struct.pack_into("<I", embedded, 0, len(embedded))
+    embedded[8:40] = ordinary[72:104]
+    struct.pack_into("<BBH", embedded, 44, 1, 0x98, TRANSFER)
+    embedded[48:] = ordinary[128:]
+    payload = bytes(embedded) + bytes((-len(embedded)) % 8)
+    agg = bytearray(168 + len(payload) + 104)
+    struct.pack_into("<I", agg, 0, len(agg))
+    agg[8:72] = b"\x11" * 64
+    agg[72:104] = b"\x22" * 32
+    struct.pack_into("<BBHQQ", agg, 108, 3, 0x98, 0x4141, 0, 123456)
+    struct.pack_into("<I", agg, 160, len(payload))
+    agg[168:168 + len(payload)] = payload
+    return block_fixture(transactions=(ordinary, bytes(agg)))
+
