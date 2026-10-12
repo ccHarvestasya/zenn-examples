@@ -4,9 +4,6 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-DEMOS = {
-    '07-finalization': 'finalization.py',
-}
 
 
 def main():
@@ -14,12 +11,6 @@ def main():
     for sample in sorted((ROOT / 'symbol-p2p').iterdir()):
         if not sample.is_dir():
             continue
-        if sample.name in DEMOS:
-            print(f'Running offline demo {sample.name}', flush=True)
-            result = subprocess.run([sys.executable, DEMOS[sample.name], '--demo'],
-                                    cwd=sample, stdout=subprocess.DEVNULL)
-            if result.returncode:
-                failures.append(sample.name)
         tests = ROOT / 'tests' / 'symbol-p2p' / sample.name
         if not tests.is_dir():
             continue

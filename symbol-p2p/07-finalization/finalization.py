@@ -5,8 +5,7 @@ import json
 import struct
 import sys
 
-from chain_statistics import ProtocolError, make_context
-from p2p_common import exchange, packet
+from p2p_common import ProtocolError, exchange, make_context, packet
 
 CERT_DIRECTORY = Path(__file__).resolve().parent.parent / "common" / "cert"
 
@@ -67,43 +66,35 @@ def parse_proof(data: bytes) -> dict | None:
     return result
 
 
-def demo():
-    stats_bytes = STAT_FIELDS.pack(3, 8, 246, bytes.fromhex('AB' * 32))
-    group = (GROUP_HEADER.pack(24 + 32 + 192, 1, 1, 1, 246)
-             + bytes.fromhex('CD' * 32) + bytes(192))
-    proof_bytes = (PROOF_HEADER.pack(PROOF_HEADER.size + len(group), 1, 3, 8, 246,
-                                     bytes.fromhex('AB' * 32)) + group)
-    return {'statistics': parse_statistics(stats_bytes), 'proof': parse_proof(proof_bytes)}
+def query(host, port, context, kind, value=None):
+    request, expected_type, cap = make_request(kind, value)
+    data = exchange(host, port, context, request, expected_type, cap)
+    result = parse_statistics(data) if kind == 'stats' else parse_proof(data)
+    if result is not None and kind in ('height', 'epoch') and result[kind] != value:
+        raise ProtocolError('要求した高さまたはエポックと Proof が一致しません')
+    return result
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument('--demo', action='store_true', help='通信なしの模擬解析')
     mode.add_argument('--stats', action='store_true', help='Finalization Statistics')
     mode.add_argument('--proof-height', type=int, help='指定高の Finalization Proof')
     mode.add_argument('--proof-epoch', type=int, help='指定 epoch の Finalization Proof')
-    parser.add_argument('--host', help='認証済みの接続先')
+    parser.add_argument('host', help='接続先のホスト名または IP')
     parser.add_argument('--port', type=int, default=7900)
-    parser.add_argument('--peer-ca')
     parser.add_argument('--cert', default=str(CERT_DIRECTORY / "node.full.crt.pem"))
     parser.add_argument('--key', default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
-    if not args.demo and (not args.host or not args.peer_ca):
-        parser.error('実ノード要求には --host と --peer-ca が必要です')
     if not 1 <= args.port <= 65535:
         parser.error('port は1〜65535を指定してください')
     try:
-        if args.demo:
-            result = demo()
-        else:
-            kind = 'stats' if args.stats else ('height' if args.proof_height is not None else 'epoch')
-            value = args.proof_height if kind == 'height' else args.proof_epoch
-            request, expected_type, cap = make_request(kind, value)
-            context = make_context(args.peer_ca, args.cert, args.key)
-            data = exchange(args.host, args.port, context, request, expected_type, cap)
-            result = parse_statistics(data) if kind == 'stats' else parse_proof(data)
-        print(json.dumps(result, indent=2, ensure_ascii=False))
+        kind = 'stats' if args.stats else ('height' if args.proof_height is not None else 'epoch')
+        value = args.proof_height if kind == 'height' else args.proof_epoch
+        make_request(kind, value)
+        context = make_context(args.cert, args.key)
+        result = query(args.host, args.port, context, kind, value)
+        print(json.dumps(result, indent=2, ensure_ascii=True))
         return 0
     except (OSError, ValueError) as exc:
         print(f'取得・解析失敗: {exc}', file=sys.stderr)

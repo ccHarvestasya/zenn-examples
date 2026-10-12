@@ -11,4 +11,4 @@ python3 -m pip install -r symbol-p2p/05-block-fetch/requirements.txt
 python3 tests/run_tests.py
 ```
 
-各回のコードを別の Python プロセスで読み込み、テストと通信しないデモを実行します。TLS テストには OpenSSL CLI とループバック通信が必要です。鍵は一時ディレクトリ内で生成・削除します。検証記録は `../docs/validation/symbol-p2p/` にあります。
+各回のコードを別の Python プロセスで読み込み、テストを実行します。TLS テストには OpenSSL CLI とループバック通信が必要です。鍵は一時ディレクトリ内で生成・削除します。検証記録は `../docs/validation/symbol-p2p/` にあります。
