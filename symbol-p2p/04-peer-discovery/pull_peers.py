@@ -7,8 +7,7 @@ import struct
 import sys
 import time
 
-from chain_statistics import HEADER, ProtocolError, TIMEOUT, make_context, recv_exact
-from node_info import DEMO_PACKET, NODE_FIXED, parse_payload
+from node_info import HEADER, NODE_FIXED, ProtocolError, TIMEOUT, make_context, parse_payload, recv_exact
 
 CERT_DIRECTORY = Path(__file__).resolve().parent.parent / "common" / "cert"
 
@@ -63,20 +62,7 @@ def read_peers(sock, deadline: float) -> list:
     return parse_packet(header + body)
 
 
-def make_demo_packet() -> bytes:
-    # Both records are fictitious. No network request is made.
-    first = bytearray(DEMO_PACKET[HEADER.size:])
-    second = bytearray(first)
-    second[8:40] = bytes(range(64, 96))
-    struct.pack_into("<H", second, 76, 7901)
-    second[81:90] = b"127.0.0.1"
-    second[90:94] = b"peer"
-    body = bytes(first) + bytes(second)
-    return HEADER.pack(HEADER.size + len(body), PULL_PEERS) + body
-
-
-def query(host: str, port: int, peer_ca: str, cert: str, key: str) -> list:
-    context = make_context(peer_ca, cert, key)
+def query(host: str, port: int, context) -> list:
     with socket.create_connection((host, port), timeout=TIMEOUT) as tcp:
         with context.wrap_socket(tcp, server_hostname=host) as tls:
             tls.settimeout(TIMEOUT)
@@ -87,24 +73,17 @@ def query(host: str, port: int, peer_ca: str, cert: str, key: str) -> list:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--demo", action="store_true")
-    mode.add_argument("--host", help="既知の接続先")
+    parser.add_argument("host", help="接続先のホスト名または IP")
     parser.add_argument("--port", type=int, default=7900)
-    parser.add_argument("--peer-ca")
     parser.add_argument("--cert", default=str(CERT_DIRECTORY / "node.full.crt.pem"))
     parser.add_argument("--key", default=str(CERT_DIRECTORY / "node.key.pem"))
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port は 1〜65535 で指定してください")
-    if args.host and not args.peer_ca:
-        parser.error("--host には --peer-ca が必要です")
 
     try:
-        peers = (
-            parse_packet(make_demo_packet()) if args.demo
-            else query(args.host, args.port, args.peer_ca, args.cert, args.key)
-        )
+        context = make_context(args.cert, args.key)
+        peers = query(args.host, args.port, context)
     except (OSError, ValueError) as exc:
         print(f"取得失敗: {exc}", file=sys.stderr)
         return 1

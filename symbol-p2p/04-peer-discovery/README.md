@@ -2,18 +2,21 @@
 
 [記事原稿](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-04-peer-discovery.md)
 
-リポジトリ取得後、`symbol-p2p/04-peer-discovery/` に移動して実行します。このディレクトリに必要な Python の依存ファイルを同梱しています。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
+リポジトリ取得後、`symbol-p2p/04-peer-discovery/` に移動して実行します。必要な通信処理とノード情報のパーサーを同梱しています。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
+
+共通のクライアント証明書を用意してから、接続先を指定して実行します。
 
 ```bash
-python3 pull_peers.py --demo
+python3 pull_peers.py testnet1.symbol-mikun.net --port 7900
 ```
 
-上のコマンドは通信しないデモです。通信機能があるコードでは、同梱の `chain_statistics.py` が接続先の CA ファイルを使う TLS 設定を提供します。第1回の学習用コードとは設定が異なります。実ノードへの接続条件は記事を参照してください。
+第1〜3回と同じく、Python 側では `CERT_NONE` で接続先の証明書検証を省略する学習用の接続です。取得した候補への接続は行いません。
+
+2026年10月12日に Testnet ノードから14件の候補を取得しました。出力例は記事に掲載しています。
 
 クライアント証明書は各回で共通の `../common/cert/` を使います。まだ作成していない場合だけ、`bash ../common/generate_certificates.sh` を実行してください。回ごとに鍵を作り直す必要はありません。
 
 ## ファイル
 
-- [chain_statistics.py](chain_statistics.py)
-- [node_info.py](node_info.py)
 - [pull_peers.py](pull_peers.py)
+- [node_info.py](node_info.py)：TLS 設定、受信処理、NetworkNode の解析
