@@ -1,0 +1,11 @@
+# Synthetic packet: test-network identifier, deliberately fictitious key/seed.
+NODE_PACKET = bytes.fromhex(
+    "66000000 11010000 5e000000 04030201"
+    "000102030405060708090a0b0c0d0e0f"
+    "101112131415161718191a1b1c1d1e1f"
+    "202122232425262728292a2b2c2d2e2f"
+    "303132333435363738393a3b3c3d3e3f"
+    "01000000 dc1e 98 09 04"
+    "6c6f63616c686f7374 6e6f6465"
+)
+

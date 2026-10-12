@@ -2,17 +2,20 @@
 
 [記事原稿](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-09-wireshark.md)
 
-リポジトリ取得後、`symbol-p2p/09-wireshark/` に移動して実行します。このディレクトリに必要な Python の依存ファイルを同梱しています。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
+リポジトリ取得後、`symbol-p2p/09-wireshark/` に移動して実行します。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
 
 ```bash
-env -u SSLKEYLOGFILE python3 capture_lab.py --port 37900
+python3 capture_peer.py testnet1.symbol-mikun.net --port 7900
 ```
 
-ローカルの TLS サーバーとクライアントを起動します。キャプチャ・復号手順は記事を参照してください。外部ノードへ接続しません。
+共通のクライアント証明書を `../common/cert/` から読み込みます。まだ作成していない場合だけ、`bash ../common/generate_certificates.sh` を実行してください。
+
+第1〜8回と同じく、接続先の証明書検証は `CERT_NONE` で省略する学習用コードです。ノード情報を取得する読み取り通信だけを行います。
+
+`--keylog` に新しいファイルを指定すると、この接続のセッション鍵ログを生成します。2026年10月12日に実ノードへの接続・応答ヘッダー・鍵ログの生成を確認しました。Wiresharkのキャプチャ・GUI・復号は未検証です。手順と実出力は記事を参照してください。
+
+鍵ログとキャプチャはGitに追加せず、不要になったものを削除してください。
 
 ## ファイル
 
-- [capture_lab.py](capture_lab.py)
-- [chain_statistics.py](chain_statistics.py)
-- [node_info.py](node_info.py)
-
+- [capture_peer.py](capture_peer.py)：TLS接続、応答ヘッダー、任意の鍵ログ
