@@ -1,6 +1,6 @@
-# 第7回：ファイナライズ情報
+# 第7章：ファイナライズ情報
 
-[記事原稿](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-07-finalization.md)
+[書籍の章原稿](https://github.com/ccHarvestasya/zenn/blob/main/books/symbol-p2p-python/07-finalization.md)
 
 リポジトリ取得後、`symbol-p2p/07-finalization/` に移動して実行します。Python 3.12 以上を使用し、追加の Python パッケージは不要です。
 
@@ -17,11 +17,11 @@ python3 finalization.py testnet1.symbol-mikun.net --port 7900 --proof-epoch 5273
 python3 finalization.py testnet1.symbol-mikun.net --port 7900 --proof-height 3795264
 ```
 
-このとき高さ指定は空応答となり、`null` を表示しました。実出力は記事に掲載しています。空の応答だけで、ブロックが未確定とは判断しません。
+このとき高さ指定は空応答となり、`null` を表示しました。実出力は対応する章に掲載しています。空の応答だけで、ブロックが未確定とは判断しません。
 
 クライアント証明書は共通の `../common/cert/` を使います。まだ作成していない場合だけ、`bash ../common/generate_certificates.sh` を実行してください。
 
-第1〜6回と同じく、接続先の証明書検証は `CERT_NONE` で省略しています。Proof の署名や投票重みの検証も行いません。
+第1〜6章と同じく、接続先の証明書検証は `CERT_NONE` で省略しています。Proof の署名や投票重みの検証も行いません。
 
 ## ファイル
 

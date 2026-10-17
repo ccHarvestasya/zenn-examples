@@ -1,6 +1,6 @@
-# 第8回：トランザクションの送信
+# 第8章：トランザクションの送信
 
-[記事原稿](https://github.com/ccHarvestasya/zenn/blob/main/articles/symbol-p2p-08-transaction-announce.md)
+[書籍の章原稿](https://github.com/ccHarvestasya/zenn/blob/main/books/symbol-p2p-python/08-transaction-announce.md)
 
 リポジトリ取得後、`symbol-p2p/08-transaction-announce/` に移動します。Python 3.12 以上と Python 版 Symbol SDK 3.3.2 を使用します。
 
@@ -14,11 +14,11 @@ python3 push_transaction.py testnet1.symbol-mikun.net signed-transaction.hex --p
 
 既定では署名と形式を検査し、パケットを組み立てるだけで接続しません。作成コードは、環境変数 `SYMBOL_PRIVATE_KEY` があればその鍵を、なければメモリ内で生成する一時鍵を使用します。秘密鍵は保存・表示しません。一時アカウントには残高がなく、送信前チェック用です。
 
-実送信には、手数料を支払える残高を持つTestnetアカウントの署名済みペイロードを使い、`--send` を付けます。詳細は記事の実行手順を参照してください。公開ノードでの送信・受理・ブロック取り込みは未検証です。
+実送信には、手数料を支払える残高を持つTestnetアカウントの署名済みペイロードを使い、`--send` を付けます。詳細は対応する章の実行手順を参照してください。公開ノードでの送信・受理・ブロック取り込みは未検証です。
 
 クライアント証明書は共通の `../common/cert/` を使います。まだ作成していない場合だけ、`bash ../common/generate_certificates.sh` を実行してください。
 
-第1〜7回と同じく、接続先の証明書検証は `CERT_NONE` で省略しています。送信の完了だけで受理・ブロック取り込みは確認できません。
+第1〜7章と同じく、接続先の証明書検証は `CERT_NONE` で省略しています。送信の完了だけで受理・ブロック取り込みは確認できません。
 
 ## ファイル
 
